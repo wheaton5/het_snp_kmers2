@@ -1,0 +1,91 @@
+#!/usr/bin/env python
+
+import argparse
+import subprocess
+import time
+import numpy as np
+
+parser = argparse.ArgumentParser(
+    description="distribute het kmer detection")
+parser.add_argument("-n","--num_jobs",type=int,required=True, help="number of jobs")
+parser.add_argument("-i","--inputs",required=True, nargs="+", 
+    help = "input files, takes fasta/fastq (optionally gzipped), sam, bam")
+parser.add_argument("-o","--output",required=True, help="output filename for het kmers")
+parser.add_argument("-k","--kmer_size",type=int,required=False,help="kmer size to use. default = 21, supports up to 31. must be odd")
+parser.add_argument("-m","--min_count",type=int,required=True,help="mininum kmer count to output.")
+parser.add_argument("-H","--output_hist",required=True,help="output hist file name")
+parser.add_argument("-u","--estimated_unique_kmers",required=True, 
+    help="estimated number of unique kmers in your dataset, rule of thumb is 2-3x genome size")
+parser.add_argument("-j","--job_output",required=False,help="file to output bsub messaging")
+parser.add_argument("-M","--mem_per_job",type=int,required=True,help="mem per job in megabytes")
+
+args = parser.parse_args()
+
+assert (args.kmer_size % 2) == 1,"kmer size must be odd"
+job_output = args.job_output
+if job_output == None:
+    job_output = args.output+"_bsub.out"
+jobscript_names = []
+output_names = []
+output_hist_names = []
+for i in range(0,args.num_jobs):
+        
+    command = ["bsub","-o",job_output,
+        "-n1", "-R\"span[hosts=1] select[mem>"+str(args.mem_per_job)+
+        "] rusage[mem="+str(args.mem_per_job)+"]\" -M"+str(args.mem_per_job)]
+    command.extend(["-J",job_output+str(i)])
+    jobscript_name = "jobscript"+str(i)+".sh"
+    jobscript_names.append(jobscript_name)
+    with open(jobscript_name,'w') as jobscript:
+        jobcmd = ["het_snp_kmers", "--inputs"]
+        jobcmd.extend(args.inputs)
+        jobcmd.extend(["--min_coverage",str(args.min_count)])
+        jobcmd.extend(["--modimizer",str(args.num_jobs)])
+        jobcmd.extend(["--mod_remainder",str(i)])
+        jobcmd.extend(["--estimated_kmers",str(args.estimated_unique_kmers)])
+        jobcmd.extend(["--output",str(args.output)+str(i)+"_het.tsv"])
+        jobcmd.extend(["--output_full_hist",args.output_hist+str(i)+"_hist.tsv"])
+        output_hist_names.append(args.output_hist+str(i)+"_hist.tsv")
+        output_names.append(str(args.output)+str(i)+"_het.tsv")
+        print " ".join(jobcmd)
+        jobscript.write(" ".join(jobcmd)+"\n")
+
+    
+    subprocess.check_call(["chmod","777",jobscript_names[-1]])
+    command.append("./"+jobscript_names[-1])
+    print " ".join(command)
+    subprocess.check_call(" ".join(command)+"\n",shell=True)
+    
+# wait until they are done, check every 30 seconds
+while True:
+    time.sleep(0.5)        
+    output = subprocess.check_output(["bjobs","-w"]).split("\n")
+    done = True
+    for line in output:
+        if job_output in line:
+            done = False
+    if done:
+        print "I think all jobs are completed"
+        break
+
+# write some joining code
+with open(args.output,'w') as out:
+    cmd = ['cat']
+    cmd.extend(output_names)
+    subprocess.check_call(cmd,stdout=out)
+for name in output_names:
+    subprocess.check_call(['rm',name])
+for name in jobscript_names:
+    subprocess.check_call(['rm',name])
+
+hist = np.zeros(1000)
+for name in output_hist_names:
+    with open(name) as histfl:
+        for line in histfl:
+            tokens = line.strip().split()
+            hist[int(tokens[0])] += int(tokens[1])
+with open(args.output_hist,'w') as out:
+    for (index, count) in enumerate(hist):
+        out.write(str(index)+"\t"+str(count)+"\n")
+for name in output_hist_names:
+    subprocess.check_call(["rm",name])

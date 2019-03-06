@@ -1,0 +1,46 @@
+name: het_snp_kmers
+version: "1.0"
+author: Haynes Heaton <whheaton@gmail.com>
+about: Finds kmer pairs that are different in the middle base and each have roughly haploid coverage. Meant for illumina data as an initial step for de novo phasing.
+args:
+    - inputs:
+        long: inputs
+        short: i
+        takes_value: true
+        multiple: true
+        required: true
+        help: input sequence files (fastq,fasta can be gzipped, sam, bam) from which to find het snp kmers
+    - output:
+        long: output
+        short: o
+        takes_value: true
+        required: false
+    - kmer_size:
+        long: kmer_size
+        short: k
+        takes_value: true
+        required: false
+        help: kmer size to use, defaults to 21
+    - min_coverage:
+        long: min_coverage
+        takes_value: true
+        required: true
+        help: min coverage for each kmer of the pair
+    - estimated_kmers:
+        required: true
+        takes_value: true
+        long: estimated_kmers
+        help: estimated total unique kmers. good rule of thumb is roughly 2 * genome size
+    - output_full_hist:
+        long: output_full_hist
+        required: true
+        takes_value: true
+        help: file name for full kmer histogram
+    - modimizer:
+        long: modimizer
+        takes_value: true
+        help: this is a test
+    - mod_remainder:
+        long: mod_remainder
+        takes_value: true
+        help: this is a test
