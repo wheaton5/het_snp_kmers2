@@ -21,6 +21,7 @@ cd het_snp_kmers2
 cargo build --release
 ```
 To get all het kmers and run distributed on lsf run the python script named het_kmer_distributor. If you have a different cluster setup it should be relatively easy to edit this script accordingly. 
+requires python 3 but just change print statements if you prefer python 2
 ```
 ./het_kmer_distributer -h
 usage: het_kmer_distributer [-h] -n NUM_JOBS -i INPUTS [INPUTS ...] -o OUTPUT
