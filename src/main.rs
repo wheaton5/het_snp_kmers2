@@ -12,7 +12,6 @@ extern crate hashbrown;
 use clap::{App};
 
 use hashbrown::{HashMap, HashSet};
-//use std::collections::{HashMap};
 use fnv::FnvHasher;
 use std::hash::BuildHasherDefault;
 type FnvHashMap<T,V> = HashMap<T,V, BuildHasherDefault<FnvHasher>>;
@@ -133,6 +132,7 @@ fn count_kmers_fastq(params: &Params) -> FnvHashMap<u64,[u16;4]> {
                             let to_hash = min(kmer.to_u64(), kmer.rc().to_u64());
                             array[index] = filter.estimate_count(&to_hash) as u16;
                         }
+                        array[((middle_base_only & to_hash) >> (KX::K()-1)) as usize] += 1;
                         counts.insert(middle_base_invariant, array);
                     },
                     _ => (),
