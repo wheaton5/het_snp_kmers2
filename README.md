@@ -2,7 +2,6 @@
 memory efficient de novo detection of het snp kmers using counting bloom filters.
 
 Install requirements: rust ver 1.3 or later, clang
-If you do not have rust
 ```
 curl https://sh.rustup.rs -sSf | sh
 echo 'export PATH=~/.cargo/bin:$PATH' >> ~/.bashrc
@@ -93,3 +92,6 @@ Example on made up small test data
 ./target/release/het_snp_kmers --inputs test/data/test.fastq.gz --estimated_kmers 200 --min_coverage 4 --output_full_hist hist.tsv
 AAAAAAGGGGACCCCCTTTTT   7       AAAAAAGGGGGCCCCCTTTTT   4       0
 ```
+
+
+If using  
