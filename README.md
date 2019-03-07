@@ -92,7 +92,8 @@ Example on made up small test data
 ./target/release/het_snp_kmers --inputs test/data/test.fastq.gz --estimated_kmers 200 --min_coverage 4 --output_full_hist hist.tsv
 AAAAAAGGGGACCCCCTTTTT   7       AAAAAAGGGGGCCCCCTTTTT   4       0
 ```
-
+The format is kmer1 count1 kmer2 count2 count3
+where count3 is the counts of the 3rd and 4th possible kmer also varying in the middle base added together.
 
 If using this in conjunction with haplovalidate (https://github.com/wheaton5/haplovalidate) I suggest you run the binary with a reasonable modimizer such as 11 or so and with a min coverage that removes most of the error kmers (10, maybe 20 if high coverage). Then you can look can look at the full histogram and decide on thresholds for filtering.
 Then there is a filter.py script to filter your het kmers.
