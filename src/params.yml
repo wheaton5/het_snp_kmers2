@@ -39,8 +39,8 @@ args:
     - modimizer:
         long: modimizer
         takes_value: true
-        help: this is a test
+        help: kmer % modimizer == mod_remainder kmers will be counted, default 1
     - mod_remainder:
         long: mod_remainder
         takes_value: true
-        help: this is a test
+        help: kmer % modimizer == mod_remainder kmers will be counted, default 0

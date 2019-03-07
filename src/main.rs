@@ -51,7 +51,6 @@ fn detect_pairs(kmer_counts: FnvHashMap<u64,[u16; 4]>, params: &Params) {
         File::create(&params.output_hist)
         .expect("Unable to create file for writing"));
 
-    //let visited: FnvHashSet<u64> = FnvHashSet::default(); 
     let a_mask = 0;
     let c_mask = ( 1 << ( KX::K() - 1 ) ); // or a C in the middle
     let g_mask = ( 2 << ( KX::K() - 1 ) ); // etc
@@ -94,7 +93,6 @@ fn detect_pairs(kmer_counts: FnvHashMap<u64,[u16; 4]>, params: &Params) {
 }
 
 fn count_kmers_fastq(params: &Params) -> FnvHashMap<u64,[u16;4]> {
-    //let middle_base_mask: u64 = !( 3 << ( KX::K() - 1 ) ); // make a mask that is 1's outside the two bits at the center of the kmer 
     let estimated_kmers = params.estimated_kmers/params.modimizer;
     if estimated_kmers > std::u32::MAX as u64 { panic!("can't deal with this many kmers in counting bloom filter"); }
     let estimated_kmers = estimated_kmers as u32;
@@ -104,7 +102,6 @@ fn count_kmers_fastq(params: &Params) -> FnvHashMap<u64,[u16;4]> {
         CountingBloomFilter::with_rate(counting_bits, 0.05, estimated_kmers);
     let mut counts: FnvHashMap<u64,[u16;4]> = FnvHashMap::default();
     let mut middle_base_mask: u64 = !( 3 << ( KX::K() - 1) );
-    //middle_base_mask = middle_base_mask & KmerX::top_mask( KX::K() );
     let middle_base_only: u64 = 3<<(KX::K()-1);
     let a_mask = 0;
     let c_mask = ( 1 << ( KX::K() - 1 ) );
@@ -115,12 +112,9 @@ fn count_kmers_fastq(params: &Params) -> FnvHashMap<u64,[u16;4]> {
     for kmer_file in &params.input_files {
         let reader = dna_io::DnaReader::from_path(kmer_file);
         for record in reader {
-            //'kmerloop: for kmeru64 in from_ascii(&record.seq.as_bytes()) {
             'kmerloop: for k in KmerX::kmers_from_ascii(&record.seq.as_bytes()) {
-                //let k = KmerX::from_u64(kmeru64);
                 let krc = k.rc();
                 let middle_base_invariant = min( k.to_u64() & middle_base_mask, krc.to_u64() & middle_base_mask );
-                // below is the line that splits thread work and maintains that ...X... and ...Y... kmers end up in the same thread
                 if middle_base_invariant % params.modimizer != params.mod_index { continue; }
                 let to_hash = min( k.to_u64(), krc.to_u64() );
                 //if counts.contains_key(&middle_base_invariant) {
@@ -132,17 +126,16 @@ fn count_kmers_fastq(params: &Params) -> FnvHashMap<u64,[u16;4]> {
                     None => (),
                 }
                 match filter.insert_get_count(&to_hash) {
-                    a if a >= params.min_count => {
+                    a if a >= params.min_count - 1 => {
                         let mut array = [0u16; 4];
                         for (index, base_mask) in masks.iter().enumerate() {
                             let kmer = KmerX::from_u64(middle_base_invariant | base_mask);
                             let to_hash = min(kmer.to_u64(), kmer.rc().to_u64());
-                            //println!("double check {} {}",k.to_string(),kmer.to_string());
                             array[index] = filter.estimate_count(&to_hash) as u16;
                         }
                         counts.insert(middle_base_invariant, array);
                     },
-                    _ => ()
+                    _ => (),
                 }
             }
         }
@@ -187,7 +180,7 @@ fn load_params() -> Params {
         Some(x) => Some(x.to_string()),
         None => None,
     };
-    let min = params.value_of("min_coverage").unwrap();
+    let min = params.value_of("min_coverage").unwrap_or("5");
     let min: u32 = min.to_string().parse::<u32>().unwrap();
     let kmer_size = params.value_of("kmer_size").unwrap_or("21");
     let kmer_size: usize = kmer_size.to_string().parse::<usize>().unwrap();
@@ -207,7 +200,7 @@ fn load_params() -> Params {
     //let counting_bits: usize = counting_bits.to_string().parse::<usize>().unwrap();
     let modimizer = params.value_of("modimizer").unwrap_or("1");
     let modimizer: u64 = modimizer.to_string().parse::<u64>().unwrap();
-    let mod_index = params.value_of("mod_remainder").unwrap();
+    let mod_index = params.value_of("mod_remainder").unwrap_or("0");
     let mod_index = mod_index.to_string().parse::<u64>().unwrap();
     Params{
         min_count: min,

@@ -47,13 +47,13 @@ for i in range(0,args.num_jobs):
         jobcmd.extend(["--output_full_hist",args.output_hist+str(i)+"_hist.tsv"])
         output_hist_names.append(args.output_hist+str(i)+"_hist.tsv")
         output_names.append(str(args.output)+str(i)+"_het.tsv")
-        print " ".join(jobcmd)
+        print(" ".join(jobcmd))
         jobscript.write(" ".join(jobcmd)+"\n")
 
     
     subprocess.check_call(["chmod","777",jobscript_names[-1]])
     command.append("./"+jobscript_names[-1])
-    print " ".join(command)
+    print(" ".join(command))
     subprocess.check_call(" ".join(command)+"\n",shell=True)
     
 # wait until they are done, check every 30 seconds
@@ -65,7 +65,7 @@ while True:
         if job_output in line:
             done = False
     if done:
-        print "I think all jobs are completed"
+        print("all jobs are completed")
         break
 
 # write some joining code
