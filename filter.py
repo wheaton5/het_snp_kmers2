@@ -4,7 +4,7 @@ import argparse
 
 parser = argparse.ArgumentParser(description="filter het kmer set on coverage thresholds")
 
-parser.add_argument("input",required=True,help="input kmer set file as output by het_snp_kmers")
+parser.add_argument("input",help="input kmer set file as output by het_snp_kmers")
 
 parser.add_argument("--min", help = "min coverage",default=0)
 parser.add_argument("--max", help = "max coverage",default=100000000)
@@ -22,4 +22,4 @@ with open(args.input) as kmers:
         ct = c1+c2
         ce = int(tokens[4])
         if c1 >= args.min and c2 >= args.min and c1 <= args.max and c2 <= args.max and ct <= args.max_sum and ct >= args.min_sum and ce <= args.max_offsite:
-            print line.strip()
+            print(line.strip())

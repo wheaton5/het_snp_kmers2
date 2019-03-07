@@ -94,4 +94,26 @@ AAAAAAGGGGACCCCCTTTTT   7       AAAAAAGGGGGCCCCCTTTTT   4       0
 ```
 
 
-If using  
+If using this in conjunction with haplovalidate (https://github.com/wheaton5/haplovalidate) I suggest you run the binary with a reasonable modimizer such as 11 or so and with a min coverage that removes most of the error kmers (10, maybe 20 if high coverage). Then you can look can look at the full histogram and decide on thresholds for filtering.
+Then there is a filter.py script to filter your het kmers.
+```
+./filter.py -h
+usage: filter.py [-h] [--min MIN] [--max MAX] [--max_offsite MAX_OFFSITE]
+                 [--max_sum MAX_SUM] [--min_sum MIN_SUM]
+                 input
+
+filter het kmer set on coverage thresholds
+
+positional arguments:
+  input                 input kmer set file as output by het_snp_kmers
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --min MIN             min coverage
+  --max MAX             max coverage
+  --max_offsite MAX_OFFSITE
+                        max value of 3rd+4th middle base kmers
+  --max_sum MAX_SUM     max sum of coverage
+  --min_sum MIN_SUM     min sum of coverage
+```
+which will dump the filtered het kmers to stdout. This filtered het kmer set can then be fed into haplovalidate.
